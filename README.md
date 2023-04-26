@@ -1,20 +1,18 @@
-# 📚 PDF PowerPoint Slides Summarizer 📚
+# 📚 Mega PDF Extractor: Insane study hack for uni students 📚
 
-This project extracts text from multiple PowerPoint slides saved as PDF files, formats the text, and then generates a summary using OpenAI's ChatGPT API. It helps you get a quick overview of the contents of the slides.
+Instantly generate summaries and flashcards from PDF files using ChatGPT. 
 
 ## 🚀 Getting Started
 
-### 📋 Prerequisites
+Install the required libraries using pip:
 
-1. Python 3.6 or higher
-2. `PyPDF2` library
-3. `openai` library
-
-You can install the required libraries using pip:
-
-```bash
+```Python
 pip install PyPDF2 openai
 ```
+
+How to use:
+
+
 
 ### 🔑 API Key
 IMPORTANT: To use ChatGPT, you'll need an API key from OpenAI. Sign up for an account at https://beta.openai.com/signup/ to obtain your API key. Replace YOUR_API_KEY in summarize_text.py with your actual API key.
