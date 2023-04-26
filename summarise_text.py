@@ -1,14 +1,14 @@
-# summarize_text.py
+# summarise_text.py
 import openai
 import os
 from pdf_to_text import pdf_to_formatted_text
 
-def chat_gpt_summarize(api_key, text):
+def chat_gpt_summarise(api_key, text):
     openai.api_key = api_key
 
     response = openai.Completion.create(
         engine="text-davinci-002",
-        prompt=f"Please summarize the following text and make it easier to understand:\n{text}",
+        prompt=f"Please summarise the following text and make it easier to understand:\n{text}",
         max_tokens=150,
         n=1,
         stop=None,
@@ -28,9 +28,9 @@ def main():
     with open(output_file_path, 'r', encoding='utf-8') as file:
         formatted_text = file.read()
 
-    # Summarize the formatted text using ChatGPT API
-    api_key = "YOUR_API_KEY"
-    summary = chat_gpt_summarize(api_key, formatted_text)
+    # summarise the formatted text using ChatGPT API
+    api_key = input("Enter your OpenAI API key: ")
+    summary = chat_gpt_summarise(api_key, formatted_text)
 
     # Save the summary to a new file
     summary_file_path = os.path.join(directory, 'summary.txt')
