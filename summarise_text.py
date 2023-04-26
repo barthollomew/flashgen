@@ -1,6 +1,5 @@
-# summarise_text.py
 import openai
-import os
+import textwrap
 from pdf_to_text import pdf_to_formatted_text
 
 def chat_gpt_summarise(api_key, text):
@@ -8,7 +7,7 @@ def chat_gpt_summarise(api_key, text):
 
     response = openai.Completion.create(
         engine="text-davinci-002",
-        prompt=f"Please summarise the following text and make it easier to understand:\n{text}",
+        prompt=f"Please provide a concise summary of the following text:\n\n{text}",
         max_tokens=150,
         n=1,
         stop=None,
@@ -18,26 +17,8 @@ def chat_gpt_summarise(api_key, text):
     summary = response.choices[0].text.strip()
     return summary
 
-def main():
-    directory = input('Enter the directory containing the PDF files: ')
-
-    # Extract and format text from the PDF files
-    output_file_path = pdf_to_formatted_text(directory)
-
-    # Read the formatted text from the output file
-    with open(output_file_path, 'r', encoding='utf-8') as file:
-        formatted_text = file.read()
-
-    # summarise the formatted text using ChatGPT API
-    api_key = input("Enter your OpenAI API key: ")
+def summarise_pdf(api_key, pdf_file_path):
+    formatted_text = pdf_to_formatted_text(pdf_file_path)
     summary = chat_gpt_summarise(api_key, formatted_text)
-
-    # Save the summary to a new file
-    summary_file_path = os.path.join(directory, 'summary.txt')
-    with open(summary_file_path, 'w', encoding='utf-8') as summary_file:
-        summary_file.write(summary)
-
-    print(f'Summary generated and saved to {summary_file_path}')
-
-if __name__ == "__main__":
-    main()
+    wrapped_summary = textwrap.fill(summary, width=80)
+    return wrapped_summary

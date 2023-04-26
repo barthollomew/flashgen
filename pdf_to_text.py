@@ -1,31 +1,36 @@
-# pdf_to_text.py
-import PyPDF2
 import os
-import re
+import PyPDF2
+from PyPDF2.errors import PdfReadError
 
-def extract_text_from_pdf(pdf_file_path):
-    with open(pdf_file_path, 'rb') as file:
-        pdf_reader = PyPDF2.PdfFileReader(file)
+def pdf_to_formatted_text(pdf_file_path, directory, max_tokens=2000):
+    with open(pdf_file_path, 'rb') as pdf_file:
+        try:
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+        except PdfReadError:
+            print(f"Error: Could not read the PDF file: {pdf_file_path}. It might be encrypted or corrupted.")
+            return
+
         text = ""
-        for page_num in range(pdf_reader.numPages):
-            page = pdf_reader.getPage(page_num)
-            text += page.extractText()
-    return text
+        chunk = ""
+        chunk_counter = 0
+        for page_num in range(len(pdf_reader.pages)):
+            text += pdf_reader.pages[page_num].extract_text()
+            formatted_text = text.replace('\n', ' ').replace('  ', ' ')
+            words = formatted_text.split()
 
-def format_text(text):
-    formatted_text = re.sub(r'\s{2,}', ' ', text)
-    formatted_text = re.sub(r'\n{2,}', '\n', formatted_text)
-    return formatted_text.strip()
+            for word in words:
+                word_tokens = len(word)
+                if len(chunk) + word_tokens <= max_tokens:
+                    chunk += f"{word} "
+                else:
+                    chunk_file_path = os.path.join(directory, f'{os.path.basename(pdf_file_path)[:-4]}_chunk_{chunk_counter}.txt')
+                    with open(chunk_file_path, 'w', encoding='utf-8') as chunk_file:
+                        chunk_file.write(chunk)
+                    chunk_counter += 1
+                    chunk = f"{word} "
+            text = ""
 
-def pdf_to_formatted_text(directory):
-    pdf_files = [file for file in os.listdir(directory) if file.endswith('.pdf')]
-
-    output_file_path = os.path.join(directory, 'output.txt')
-    with open(output_file_path, 'w', encoding='utf-8') as output_file:
-        for pdf_file in pdf_files:
-            pdf_file_path = os.path.join(directory, pdf_file)
-            text = extract_text_from_pdf(pdf_file_path)
-            formatted_text = format_text(text)
-            output_file.write(f'--- {pdf_file} ---\n{formatted_text}\n\n')
-
-    return output_file_path
+        if chunk:
+            chunk_file_path = os.path.join(directory, f'{os.path.basename(pdf_file_path)[:-4]}_chunk_{chunk_counter}.txt')
+            with open(chunk_file_path, 'w', encoding='utf-8') as chunk_file:
+                chunk_file.write(chunk)
