@@ -1,4 +1,4 @@
-# 📚 PDF PowerPoint Slides Summarizer 📝
+# 📚 PDF PowerPoint Slides Summarizer 📚
 
 This project extracts text from multiple PowerPoint slides saved as PDF files, formats the text, and then generates a summary using OpenAI's ChatGPT API. It helps you get a quick overview of the contents of the slides.
 
