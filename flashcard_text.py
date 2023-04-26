@@ -30,7 +30,7 @@ def main():
         formatted_text = file.read()
 
     # Generate flashcards using ChatGPT API
-    api_key = "YOUR_API_KEY"
+    api_key = input("Enter your OpenAI API key: ")
     flashcards = chat_gpt_flashcards(api_key, formatted_text)
 
     # Save the flashcards to a CSV file
