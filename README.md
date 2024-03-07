@@ -1,6 +1,7 @@
-# 📚 Welcome to pdfProfessor
+# 📚 Welcome to pdfProfessor!
 
-![pdfProfessor](https://ray.so/QPZWx96)
+![image](https://github.com/barthollomew/pdfProfessor/assets/129575317/c091c715-d2a0-45aa-9355-80a1966396cf)
+
 
 Generate summaries and flashcards from PDF slides in bulk using the ChatGPT API. For university students.
 
