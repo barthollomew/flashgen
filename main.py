@@ -1,78 +1,116 @@
 import os
 import csv
-from pdf_to_text import pdf_to_formatted_text
-import summarise_text
-import flashcard_text
+import openai
+import PyPDF2
+from PyPDF2.errors import PdfReadError
 
-# To do: 
-# - Write function that goes through flashcards folder and deletes all empty ones containing just front back
-# - Write function that goes through summaries folder and deletes all empty ones containing just summary and combines them all into one.
+def pdf_to_formatted_text(pdf_file_path, max_tokens=2000):
+    # Extract text from PDF
+    with open(pdf_file_path, 'rb') as pdf_file:
+        try:
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+        except PdfReadError:
+            print(f"Error: Could not read the PDF file: {pdf_file_path}. It might be encrypted or corrupted.")
+            return None
+
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text()
+
+        formatted_text = text.replace('\n', ' ').replace('  ', ' ')
+        return formatted_text
+
+def split_into_chunks(text, max_tokens=2000):
+    # Split text into chunks
+    words = text.split()
+    chunks = []
+    current_chunk = []
+
+    for word in words:
+        if len(" ".join(current_chunk)) + len(word) <= max_tokens:
+            current_chunk.append(word)
+        else:
+            chunks.append(" ".join(current_chunk))
+            current_chunk = [word]
+
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))
+
+    return chunks
+
+def chat_gpt_summarise(api_key, text):
+    # Generate summary using ChatGPT
+    openai.api_key = api_key
+    response = openai.Completion.create(
+        engine="text-davinci-002",
+        prompt=f"Please provide a concise summary of the following text:\n\n{text}",
+        max_tokens=150,
+        n=1,
+        stop=None,
+        temperature=0.5,
+    )
+    summary = response.choices[0].text.strip()
+    return summary
+
+def generate_flashcards(api_key, text):
+    # Generate flashcards using ChatGPT API
+    openai.api_key = api_key
+    response = openai.Completion.create(
+        engine="text-davinci-002",
+        prompt=f"Create flashcards for the following text:\n{text}\n\nFlashcards:",
+        temperature=0.5,
+        max_tokens=1000,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+    )
+    flashcards_raw = response.choices[0].text.strip()
+    flashcards = [flashcard.strip() for flashcard in flashcards_raw.split("\n") if flashcard.strip()]
+    return flashcards
 
 def main():
+    # Main function to run program
     api_key = input("Enter your OpenAI API key: ")
-
     directory = input('Enter the directory containing the PDF files: ')
 
-    # Extract and format text from the PDF files
     pdf_files = [file for file in os.listdir(directory) if file.endswith('.pdf')]
 
-    # Create directories to store the split text files, summaries, and flashcards
-    split_directory = os.path.join(directory, 'split')
     summaries_directory = os.path.join(directory, 'summaries')
     flashcards_directory = os.path.join(directory, 'flashcards')
-    os.makedirs(split_directory, exist_ok=True)
     os.makedirs(summaries_directory, exist_ok=True)
     os.makedirs(flashcards_directory, exist_ok=True)
 
-    print("Preparing files...")
-    for pdf_file in pdf_files:
-        pdf_file_path = os.path.join(directory, pdf_file)
-        pdf_to_formatted_text(pdf_file_path, split_directory)
-
-    # Ask the user what they want to do with the extracted text
-    print("\nWhat would you like to do?")
+    print("What would you like to do?")
     print("1. Summarise text")
     print("2. Create flashcards")
     print("3. Summarise text and create flashcards")
     choice = input("Enter your choice (1, 2, or 3): ")
 
-    for chunk_file_name in os.listdir(split_directory):
-        if not chunk_file_name.endswith('.txt'):
-            continue
+    for pdf_file in pdf_files:
+        pdf_file_path = os.path.join(directory, pdf_file)
+        formatted_text = pdf_to_formatted_text(pdf_file_path)
 
-        chunk_file_path = os.path.join(split_directory, chunk_file_name)
+        if formatted_text:
+            chunks = split_into_chunks(formatted_text)
 
-        if choice == '1' or choice == '3':
-            with open(chunk_file_path, 'r', encoding='utf-8') as chunk_file:
-                chunk = chunk_file.read()
+            for i, chunk in enumerate(chunks):
+                if choice == '1' or choice == '3':
+                    summary = chat_gpt_summarise(api_key, chunk)
+                    summary_file_path = os.path.join(summaries_directory, f'summary_{pdf_file[:-4]}_chunk_{i}.txt')
+                    with open(summary_file_path, 'w', encoding='utf-8') as summary_file:
+                        summary_file.write(summary)
+                    print(f'Summary generated and saved to {summary_file_path}')
 
-            summary = summarise_text.chat_gpt_summarise(api_key, chunk)
-            summary_file_path = os.path.join(summaries_directory, f'summary_{chunk_file_name}')
-
-            with open(summary_file_path, 'w', encoding='utf-8') as summary_file:
-                summary_file.write(summary)
-
-            print(f'Summary generated and saved to {summary_file_path}')
-
-        if choice == '2' or choice == '3':
-            if choice == '3':
-                chunk_file_path = summary_file_path
-
-            flashcards = flashcard_text.generate_flashcards(api_key, chunk_file_path)
-            flashcard_file_path = os.path.join(flashcards_directory, f'flashcards_{chunk_file_name[:-4]}.csv')
-
-            with open(flashcard_file_path, 'w', encoding='utf-8', newline='') as csvfile:
-                csvwriter = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                csvwriter.writerow(['Front', 'Back'])  # Headers for Anki import
-
-                for flashcard in flashcards:
-                    if ':' not in flashcard:
-                        continue
-                    front, back = flashcard.split(':', 1)
-                    csvwriter.writerow([front.strip(), back.strip()])
-
-            print(f'Flashcards generated and saved to {flashcard_file_path}')
-
+                if choice == '2' or choice == '3':
+                    flashcards = generate_flashcards(api_key, chunk)
+                    flashcard_file_path = os.path.join(flashcards_directory, f'flashcards_{pdf_file[:-4]}_chunk_{i}.csv')
+                    with open(flashcard_file_path, 'w', encoding='utf-8', newline='') as csvfile:
+                        csvwriter = csv.writer(csvfile)
+                        csvwriter.writerow(['Front', 'Back'])
+                        for flashcard in flashcards:
+                            front, back = flashcard.split(':', 1)
+                            csvwriter.writerow([front.strip(), back.strip()])
+                    print(f'Flashcards generated and saved to {flashcard_file_path}')
 
 if __name__ == "__main__":
     main()
