@@ -69,7 +69,7 @@ def generate_flashcards(api_key, text):
     return flashcards
 
 def main():
-    print("Welcome to Mega PDF Extractor!")
+    print("Welcome to pdfProfessor!")
     print("Generate summaries and flashcards from PDF slides in bulk using the ChatGPT API.")
     print("Built for university students.")
     print()
