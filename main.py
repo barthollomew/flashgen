@@ -69,22 +69,30 @@ def generate_flashcards(api_key, text):
     return flashcards
 
 def main():
-    # Main function to run program
+    print("Welcome to Mega PDF Extractor!")
+    print("Generate summaries and flashcards from PDF slides in bulk using the ChatGPT API.")
+    print("Built for university students.")
+    print()
+
     api_key = input("Enter your OpenAI API key: ")
-    directory = input('Enter the directory containing the PDF files: ')
+    directory = input("Enter the directory containing the PDF files: ")
 
     pdf_files = [file for file in os.listdir(directory) if file.endswith('.pdf')]
 
-    summaries_directory = os.path.join(directory, 'summaries')
-    flashcards_directory = os.path.join(directory, 'flashcards')
-    os.makedirs(summaries_directory, exist_ok=True)
-    os.makedirs(flashcards_directory, exist_ok=True)
+    chunks_directory = os.path.join(directory, 'chunks')
+    output_directory = os.path.join(directory, 'output')
+    os.makedirs(chunks_directory, exist_ok=True)
+    os.makedirs(output_directory, exist_ok=True)
 
-    print("What would you like to do?")
+    print("\nWhat would you like to do?")
     print("1. Summarise text")
     print("2. Create flashcards")
     print("3. Summarise text and create flashcards")
     choice = input("Enter your choice (1, 2, or 3): ")
+    print()
+
+    summaries = []
+    flashcards = []
 
     for pdf_file in pdf_files:
         pdf_file_path = os.path.join(directory, pdf_file)
@@ -96,21 +104,39 @@ def main():
             for i, chunk in enumerate(chunks):
                 if choice == '1' or choice == '3':
                     summary = chat_gpt_summarise(api_key, chunk)
-                    summary_file_path = os.path.join(summaries_directory, f'summary_{pdf_file[:-4]}_chunk_{i}.txt')
+                    summary_file_path = os.path.join(chunks_directory, f'summary_{pdf_file[:-4]}_chunk_{i}.txt')
                     with open(summary_file_path, 'w', encoding='utf-8') as summary_file:
                         summary_file.write(summary)
-                    print(f'Summary generated and saved to {summary_file_path}')
+                    summaries.append(summary)
+                    print(f"Summary generated and saved to {summary_file_path}")
 
                 if choice == '2' or choice == '3':
-                    flashcards = generate_flashcards(api_key, chunk)
-                    flashcard_file_path = os.path.join(flashcards_directory, f'flashcards_{pdf_file[:-4]}_chunk_{i}.csv')
+                    chunk_flashcards = generate_flashcards(api_key, chunk)
+                    flashcard_file_path = os.path.join(chunks_directory, f'flashcards_{pdf_file[:-4]}_chunk_{i}.csv')
                     with open(flashcard_file_path, 'w', encoding='utf-8', newline='') as csvfile:
                         csvwriter = csv.writer(csvfile)
                         csvwriter.writerow(['Front', 'Back'])
-                        for flashcard in flashcards:
+                        for flashcard in chunk_flashcards:
                             front, back = flashcard.split(':', 1)
                             csvwriter.writerow([front.strip(), back.strip()])
-                    print(f'Flashcards generated and saved to {flashcard_file_path}')
+                    flashcards.extend(chunk_flashcards)
+                    print(f"Flashcards generated and saved to {flashcard_file_path}")
+
+    if choice == '1' or choice == '3':
+        combined_summary_path = os.path.join(output_directory, 'combined_summary.txt')
+        with open(combined_summary_path, 'w', encoding='utf-8') as summary_file:
+            summary_file.write('\n\n'.join(summaries))
+        print(f"\nCombined summary saved to {combined_summary_path}")
+
+    if choice == '2' or choice == '3':
+        combined_flashcards_path = os.path.join(output_directory, 'combined_flashcards.csv')
+        with open(combined_flashcards_path, 'w', encoding='utf-8', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            csvwriter.writerow(['Front', 'Back'])
+            for flashcard in flashcards:
+                front, back = flashcard.split(':', 1)
+                csvwriter.writerow([front.strip(), back.strip()])
+        print(f"Combined flashcards saved to {combined_flashcards_path}")
 
 if __name__ == "__main__":
     main()
