@@ -1,4 +1,6 @@
-# 📚 Bulk PDF Summary & Flashcard Generator
+# 📚 Welcome to pdfProfessor
+
+![Code Snippet](https://ray.so/_next/image?url=https%3A%2F%2Fres.cloudinary.com%2Fdtpjz4c2g%2Fimage%2Fupload%2Fc_fill%2Cf_auto%2Cq_auto%2Ch_350%2Cw_900%2Fv1%2Fuploads%2Fcode_N9ecmXh_1920_rlayun.png&w=1920&q=75)
 
 Generate summaries and flashcards from PDF slides in bulk using the ChatGPT API. For university students.
 
