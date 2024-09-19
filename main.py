@@ -15,8 +15,7 @@ def main(directory, choice):
         directory (str): The directory containing the PDF files.
         choice (str): The operation choice: '1' for summarizing, '2' for flashcards, '3' for both.
     """
-    print("Welcome to pdfProfessor!")
-    print("Generate summaries and flashcards from PDF slides in bulk using the ChatGPT API.")
+    print("Bulk generate summaries and flashcards from PDF slides using ChatGPT.")
     print("Built for university students.")
     print()
 
