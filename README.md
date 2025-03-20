@@ -14,7 +14,7 @@ FlashGen is a powerful, easy-to-use command-line tool designed to help universit
 Place your PDF files in a directory that you will specify when running the tool.
 
 #### Running the Tool
-You can run Slide-Smart from the command line with the following command:
+You can run from the command line with the following command:
 
 ```bash
 python main.py --directory /path/to/pdf/files --choice 3
