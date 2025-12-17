@@ -13,32 +13,57 @@ def get_client(api_key: str) -> OpenAI:
     return OpenAI(api_key=api_key)
 
 
-def chat_gpt_summarize(client: OpenAI, text: str, model: str = DEFAULT_MODEL) -> str:
+def chat_gpt_summarize(
+    client: OpenAI,
+    text: str,
+    model: str = DEFAULT_MODEL,
+    temperature: float = 0.35,
+    max_tokens: int = 360,
+) -> str:
     """Generate a concise summary for the provided text."""
     completion = client.chat.completions.create(
         model=model,
         messages=[
             {
                 "role": "system",
-                "content": "You summarize technical lecture slides into short, clear study notes.",
+                "content": (
+                    "You summarize technical lecture slides into short, clear study notes for university students. "
+                    "Favor bullet points, key terms, and important relationships. Avoid filler."
+                ),
             },
             {
                 "role": "user",
                 "content": (
-                    "Summarize the following content for students. "
-                    "Keep it under 8 bullet points and emphasize key concepts and definitions.\n\n"
+                    "Summarize the following content into <=8 bullets. "
+                    "Highlight definitions, formulas, and cause/effect if present.\n\n"
                     f"{text}"
                 ),
             },
         ],
-        temperature=0.35,
-        max_tokens=320,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        presence_penalty=0.0,
+        frequency_penalty=0.1,
     )
     return completion.choices[0].message.content.strip()
 
 
+def _parse_flashcard_lines(raw_text: str) -> List[Dict[str, str]]:
+    cards: List[Dict[str, str]] = []
+    for line in raw_text.splitlines():
+        if ":" in line:
+            front, back = line.split(":", 1)
+            if front.strip() and back.strip():
+                cards.append({"front": front.strip(), "back": back.strip()})
+    return cards
+
+
 def generate_flashcards(
-    client: OpenAI, text: str, model: str = DEFAULT_MODEL, limit: int = 10
+    client: OpenAI,
+    text: str,
+    model: str = DEFAULT_MODEL,
+    limit: int = 10,
+    temperature: float = 0.35,
 ) -> List[Dict[str, str]]:
     """
     Generate structured flashcards using the Chat Completions API.
@@ -60,15 +85,21 @@ def generate_flashcards(
                 ),
             },
         ],
-        temperature=0.4,
+        temperature=temperature,
         max_tokens=900,
         response_format={"type": "json_object"},
     )
 
+    message_content = completion.choices[0].message.content
+
     try:
-        payload = json.loads(completion.choices[0].message.content)
+        payload = json.loads(message_content)
         flashcards = payload.get("flashcards", [])
-        return [card for card in flashcards if "front" in card and "back" in card]
+        parsed = [card for card in flashcards if "front" in card and "back" in card]
+        if parsed:
+            return parsed
     except json.JSONDecodeError:
-        # Fall back to no flashcards when the model fails to return valid JSON.
-        return []
+        pass
+
+    # Fall back to parsing plain text lines with "front: back"
+    return _parse_flashcard_lines(message_content)

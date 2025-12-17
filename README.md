@@ -1,13 +1,15 @@
 ## FlashGen
 
-FlashGen is a command-line tool that turns PDF slide decks into concise summaries and flashcards using the latest ChatGPT API (gpt-4o-mini). It is built for students who need quick study material from large batches of slides.
+FlashGen is a command-line tool that turns PDF slide decks into concise summaries and flashcards using the latest ChatGPT API (gpt-4o-mini by default). It is built for students who need quick study material from large batches of slides.
 
 ### Features
 - **Bulk PDF Processing**: Process multiple PDFs in a single directory to generate summaries and flashcards.
 - **Customizable Output**: Choose between generating summaries, flashcards, or both.
 - **Intelligent Chunking**: Automatically splits PDF content into manageable chunks for more effective summarization and flashcard generation.
-- **Easy CLI Interface**: Simple command-line interface powered by Click for ease of use.
-- **Structured Flashcards**: Uses JSON-mode Chat Completions for reliable `Front`/`Back` cards.
+- **Token-aware chunking**: Uses `tiktoken` to keep requests within model limits with configurable overlap.
+- **Structured Flashcards**: Uses JSON-mode Chat Completions with a text fallback for reliable `Front`/`Back` cards.
+- **Per-PDF and combined outputs**: Chunk-level files plus per-PDF rollups and combined CSV/TXT across the entire batch.
+- **Easy CLI Interface**: Simple command-line interface powered by Click with model/temperature/chunk-size knobs.
 
 ### Usage
 
@@ -36,11 +38,21 @@ python main.py --directory /path/to/pdf/files --choice 3
 ```
 
 #### Command-line Options
-- `--directory`: Path to the directory containing the PDF files.
-- `--choice`: Operation mode (1: Summarize text, 2: Create flashcards, 3: Summarize text and create flashcards).
+- `--directory`: Path to the directory containing the PDF files (required).
+- `--choice`: Operation mode (1: Summaries, 2: Flashcards, 3: Both).
+- `--model`: OpenAI model name (defaults to `OPENAI_MODEL` env var or `gpt-4o-mini`).
+- `--temperature`: Sampling temperature for both summaries and flashcards.
+- `--flashcard-limit`: Max cards per chunk.
+- `--chunk-tokens`: Approximate tokens per chunk for splitting.
+- `--chunk-overlap`: Token overlap between consecutive chunks.
 
 ### Example
 ```bash
 python main.py --directory /path/to/pdf/files --choice 3
 ```
 This command will generate both summaries and flashcards for all PDF files in the specified directory.
+
+### Outputs
+- Chunk-level files are stored beside your PDFs under `chunks/`.
+- Per-PDF rollups live in `output/<pdf_name>_summary.txt` and `output/<pdf_name>_flashcards.csv`.
+- Combined batch outputs are `output/combined_summary.txt` and `output/combined_flashcards.csv`.
