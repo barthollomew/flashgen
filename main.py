@@ -23,7 +23,7 @@ def main(directory, choice):
 
     chunks_directory, output_directory = setup_directories(directory)
 
-    process_pdfs(directory, chunks_directory, output_directory, config.api_key, choice)
+    process_pdfs(directory, chunks_directory, output_directory, config.client, choice)
 
 if __name__ == "__main__":
     main()
