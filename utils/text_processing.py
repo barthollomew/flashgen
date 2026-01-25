@@ -71,6 +71,9 @@ def split_into_chunks(
         end = min(len(tokens), start + max_tokens)
         chunk_tokens = tokens[start:end]
         chunks.append(tokenizer.decode(chunk_tokens))
-        start = max(end - overlap_tokens, end)
+        next_start = end - overlap_tokens
+        if next_start <= start:
+            next_start = end
+        start = next_start
 
     return [chunk.strip() for chunk in chunks if chunk.strip()]
