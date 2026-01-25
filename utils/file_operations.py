@@ -12,14 +12,16 @@ def setup_directories(directory):
 
 def write_summary(chunks_directory, pdf_file, chunk_index, summary):
     """Write summary to a file."""
-    summary_file_path = os.path.join(chunks_directory, f'summary_{pdf_file[:-4]}_chunk_{chunk_index}.txt')
+    pdf_stem, _ = os.path.splitext(pdf_file)
+    summary_file_path = os.path.join(chunks_directory, f'summary_{pdf_stem}_chunk_{chunk_index}.txt')
     with open(summary_file_path, 'w', encoding='utf-8') as summary_file:
         summary_file.write(summary)
     print(f"Summary generated and saved to {summary_file_path}")
 
 def write_flashcards(chunks_directory: str, pdf_file: str, chunk_index: int, flashcards: List[Dict[str, str]]):
     """Write flashcards to a CSV file."""
-    flashcard_file_path = os.path.join(chunks_directory, f'flashcards_{pdf_file[:-4]}_chunk_{chunk_index}.csv')
+    pdf_stem, _ = os.path.splitext(pdf_file)
+    flashcard_file_path = os.path.join(chunks_directory, f'flashcards_{pdf_stem}_chunk_{chunk_index}.csv')
     with open(flashcard_file_path, 'w', encoding='utf-8', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(['Front', 'Back'])

@@ -27,7 +27,12 @@ def process_pdfs(
     encoding_name: str = "o200k_base",
 ) -> None:
     """Process PDF files to generate summaries and/or flashcards."""
-    pdf_files = [file for file in os.listdir(directory) if file.endswith(".pdf")]
+    pdf_files = [
+        file
+        for file in os.listdir(directory)
+        if os.path.isfile(os.path.join(directory, file)) and file.lower().endswith(".pdf")
+    ]
+    pdf_files.sort()
 
     if not pdf_files:
         logging.info("No PDF files found in %s", directory)
